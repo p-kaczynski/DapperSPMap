@@ -6,7 +6,7 @@ using Dapper;
 
 namespace DapperSPMap
 {
-    public class SprocMappingExpression<TModel> : ISprocMappingExpression<TModel>
+    internal class SprocMappingExpression<TModel> : ISprocMappingExpression<TModel>
     {
         private readonly List<SprocMemberExpression<TModel>> _expressions = new List<SprocMemberExpression<TModel>>();
         private bool _isSingle;
@@ -65,7 +65,7 @@ namespace DapperSPMap
             public Operations Operation { get; private set; }
             public string ParameterName { get; private set; }
 
-            private static int _id = 0;
+            private static int _id;
             //Aggregate
             public Func<IEnumerable<object>, string> AggregationStrategy { get; private set; }
 
@@ -73,7 +73,7 @@ namespace DapperSPMap
             {
                 MemberSelector = memberSelector;
                 Operation = operation;
-                // TODO (PK): Maybe some better naming?
+                // TODO (PK): Maybe some better naming? or a way of forcing users to choose one
                 ParameterName = "param" + Interlocked.Increment(ref _id);
 
                 AggregationStrategy = objects => string.Join(",", objects);

@@ -4,7 +4,7 @@ using Dapper;
 
 namespace DapperSPMap
 {
-    public class SprocMapper
+    public static class SprocMapper
     {
         private static readonly Dictionary<Type, Dictionary<string, object>> Configuration =
             new Dictionary<Type, Dictionary<string, object>>();
@@ -55,6 +55,22 @@ namespace DapperSPMap
 
             expr.AssertConfigurationIsValid();
             return expr;
+        }
+
+        public static void RemoveMap<TModel>(string mapName)
+        {
+            if (!Configuration.ContainsKey(typeof (TModel))) return;
+
+            if (!Configuration[typeof (TModel)].ContainsKey(mapName)) return;
+
+            Configuration[typeof (TModel)].Remove(mapName);
+        }
+
+        public static void RemoveAllMaps<TModel>()
+        {
+            if (!Configuration.ContainsKey(typeof(TModel))) return;
+
+            Configuration.Remove(typeof (TModel));
         }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Dapper;
 using Should;
@@ -11,6 +12,8 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameters_ReturnsCorrectParameters()
         {
+            SprocMapper.RemoveAllMaps<MyModel>();
+
             const string useMapName = "abcd";
 
             const string idParamName = "id_param";
@@ -39,7 +42,7 @@ namespace DapperSPMap.Tests
             dynParams.ParameterNames.ShouldContain(valParamName);
             dynParams.ParameterNames.ShouldNotContain("Description");
             
-            var dynParamLookup = dynParams as SqlMapper.IParameterLookup;
+            var dynParamLookup = (SqlMapper.IParameterLookup) dynParams;
             dynParamLookup[idParamName].ShouldNotBeNull();
             dynParamLookup[valParamName].ShouldNotBeNull();
 
@@ -53,6 +56,8 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameterSets_ReturnsCorrectParameters()
         {
+            SprocMapper.RemoveAllMaps<MyModel>();
+
             const string multiMapName = "qwert";
             const string valParamName = "val_param";
             const string idParamName = "id_param";
@@ -84,6 +89,132 @@ namespace DapperSPMap.Tests
                 set[valParamName].ShouldNotBeNull();
                 set["Description"].ShouldBeNull();
             }
+        }
+
+        [Fact]
+        public void GetParameters_ThrowsExceptionIfMultipleMapping()
+        {
+            SprocMapper.RemoveAllMaps<MyModel>();
+
+            const string sampleMapName = "sample name";
+            // This creates a configuration for use with enumerable collections of MyModel entities
+            SprocMapper.CreateMap<MyModel>(sampleMapName)
+                .GroupBy(m => m.Id, opt=>opt.AsParameter("Id_name"))
+                .GroupBy(m => m.Value, opt=>opt.AsParameter("Val_name"));
+
+            Assert.Throws<SprocMapperConfigurationException>(
+                () => SprocMapper.GetParameters(new MyModel(), sampleMapName));
+
+        }
+
+        [Fact]
+        public void GetParameterSets_ThrowsExceptionIfSingleMapping()
+        {
+            SprocMapper.RemoveAllMaps<MyModel>();
+
+            const string sampleMapName = "sample name";
+            // This creates a configuration for use with enumerable collections of MyModel entities
+            SprocMapper.CreateMap<MyModel>(sampleMapName)
+                .Use(m => m.Id, opt => opt.AsParameter("Id_name"))
+                .Use(m => m.Value, opt => opt.AsParameter("Val_name"));
+
+            Assert.Throws<SprocMapperConfigurationException>(
+                () => SprocMapper.GetParameterSets(new[] {new MyModel()}, sampleMapName));
+
+        }
+
+        [Fact]
+        public void GetParameters_ThrowsExceptionIfInvalidConfiguration()
+        {
+            SprocMapper.RemoveAllMaps<MyModel>();
+
+            const string sampleMapName = "sample name";
+            // This creates a configuration for use with enumerable collections of MyModel entities
+            var expr = SprocMapper.CreateMap<MyModel>(sampleMapName)
+                .GroupBy(m => m.Id, opt => opt.AsParameter("Id_name"));
+            // And using casting it sets also a single configuration
+            ((ISingleSprocMappingExpression<MyModel>) expr).Use(m => m.Value, opt => opt.AsParameter("Val_name"));
+
+            // Should always throw - for getting single and multiple sets
+            Assert.Throws<SprocMapperConfigurationException>(
+                () => SprocMapper.GetParameters(new MyModel(), sampleMapName));
+
+            Assert.Throws<SprocMapperConfigurationException>(
+                () => SprocMapper.GetParameterSets(new[] {new MyModel()}, sampleMapName));
+        }
+
+        [Fact]
+        public void GetParameters_ThrowsExceptionIfModelNotMapped()
+        {
+            SprocMapper.RemoveAllMaps<MyModel>();
+
+            Assert.Throws<SprocMapperConfigurationException>(
+                () => SprocMapper.GetParameters(new object(), "irrelevant name"));
+        }
+
+        [Fact]
+        public void GetParameters_ThrowsExceptionIfMapNameNotFound()
+        {
+            SprocMapper.RemoveAllMaps<MyModel>();
+
+            const string sampleMapName = "sample name";
+            // This creates a configuration for use with enumerable collections of MyModel entities
+            SprocMapper.CreateMap<MyModel>(sampleMapName)
+                .GroupBy(m => m.Id, opt => opt.AsParameter("Id_name"))
+                .GroupBy(m => m.Value, opt => opt.AsParameter("Val_name"));
+
+            SprocMapper.GetParameterSets(new[] { new MyModel { Id = 1, Value = 2 } }, sampleMapName).ShouldNotBeNull();
+
+            Assert.Throws<SprocMapperConfigurationException>(
+                () => SprocMapper.GetParameterSets(new[] { new MyModel { Id = 1, Value = 2 } }, sampleMapName + sampleMapName));
+        }
+
+        [Fact]
+        public void GetParameters_RemoveMapDoesRemoveMap()
+        {
+
+            const string sampleMapName = "sample name";
+            // This creates a configuration for use with enumerable collections of MyModel entities
+            SprocMapper.CreateMap<MyModel>(sampleMapName)
+                .GroupBy(m => m.Id, opt => opt.AsParameter("Id_name"))
+                .GroupBy(m => m.Value, opt => opt.AsParameter("Val_name"));
+
+            SprocMapper.GetParameterSets(new[] { new MyModel { Id = 1, Value = 2 } }, sampleMapName).ShouldNotBeNull();
+
+            SprocMapper.RemoveMap<MyModel>(sampleMapName);
+
+            Assert.Throws<SprocMapperConfigurationException>(
+                () => SprocMapper.GetParameterSets(new[] { new MyModel { Id = 1, Value = 2 } }, sampleMapName));
+        }
+
+        [Fact]
+        public void GetParameters_DefaultAggregationStrategyWorks()
+        {
+            SprocMapper.RemoveAllMaps<MyModel>();
+
+            const string sampleMapName = "sample name";
+            const string idParamName = "Id_name";
+
+            // This creates a configuration for use with enumerable collections of MyModel entities
+            SprocMapper.CreateMap<MyModel>(sampleMapName)
+                .Aggregate(m => m.Id, opt => opt.AsParameter(idParamName))
+                .GroupBy(m => m.Value, opt => opt.AsParameter("val_name"));
+
+
+            var models = new[]
+            {
+                new MyModel {Id = 1, Value = 1},
+                new MyModel {Id = 2, Value = 1},
+                new MyModel {Id = 3, Value = 1},
+                new MyModel {Id = 4, Value = 1},
+                new MyModel {Id = 5, Value = 1}
+            };
+
+            var parameterSets = SprocMapper.GetParameterSets(models, sampleMapName).ToList();
+            parameterSets.Count.ShouldEqual(1); // all Value == 1
+            var set = parameterSets.Single() as SqlMapper.IParameterLookup;
+            set[idParamName].ShouldNotBeNull();
+            set[idParamName].ShouldEqual("1,2,3,4,5");
         }
     }
 
