@@ -7,13 +7,11 @@ using Xunit;
 
 namespace DapperSPMap.Tests
 {
-    public class SprocMapperTests
+    public class SprocMapperTests : IDisposable
     {
         [Fact]
         public void GetParameters_ReturnsCorrectParameters()
         {
-            SprocMapper.RemoveAllMaps<MyModel>();
-
             const string useMapName = "abcd";
 
             const string idParamName = "id_param";
@@ -56,8 +54,6 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameterSets_ReturnsCorrectParameters()
         {
-            SprocMapper.RemoveAllMaps<MyModel>();
-
             const string multiMapName = "qwert";
             const string valParamName = "val_param";
             const string idParamName = "id_param";
@@ -94,8 +90,6 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameters_ThrowsExceptionIfMultipleMapping()
         {
-            SprocMapper.RemoveAllMaps<MyModel>();
-
             const string sampleMapName = "sample name";
             // This creates a configuration for use with enumerable collections of MyModel entities
             SprocMapper.CreateMap<MyModel>(sampleMapName)
@@ -110,8 +104,6 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameterSets_ThrowsExceptionIfSingleMapping()
         {
-            SprocMapper.RemoveAllMaps<MyModel>();
-
             const string sampleMapName = "sample name";
             // This creates a configuration for use with enumerable collections of MyModel entities
             SprocMapper.CreateMap<MyModel>(sampleMapName)
@@ -126,8 +118,6 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameters_ThrowsExceptionIfInvalidConfiguration()
         {
-            SprocMapper.RemoveAllMaps<MyModel>();
-
             const string sampleMapName = "sample name";
             // This creates a configuration for use with enumerable collections of MyModel entities
             var expr = SprocMapper.CreateMap<MyModel>(sampleMapName)
@@ -146,8 +136,6 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameters_ThrowsExceptionIfModelNotMapped()
         {
-            SprocMapper.RemoveAllMaps<MyModel>();
-
             Assert.Throws<SprocMapperConfigurationException>(
                 () => SprocMapper.GetParameters(new object(), "irrelevant name"));
         }
@@ -155,8 +143,6 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameters_ThrowsExceptionIfMapNameNotFound()
         {
-            SprocMapper.RemoveAllMaps<MyModel>();
-
             const string sampleMapName = "sample name";
             // This creates a configuration for use with enumerable collections of MyModel entities
             SprocMapper.CreateMap<MyModel>(sampleMapName)
@@ -172,7 +158,6 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameters_RemoveMapDoesRemoveMap()
         {
-
             const string sampleMapName = "sample name";
             // This creates a configuration for use with enumerable collections of MyModel entities
             SprocMapper.CreateMap<MyModel>(sampleMapName)
@@ -190,8 +175,6 @@ namespace DapperSPMap.Tests
         [Fact]
         public void GetParameters_DefaultAggregationStrategyWorks()
         {
-            SprocMapper.RemoveAllMaps<MyModel>();
-
             const string sampleMapName = "sample name";
             const string idParamName = "Id_name";
 
@@ -215,6 +198,12 @@ namespace DapperSPMap.Tests
             var set = parameterSets.Single() as SqlMapper.IParameterLookup;
             set[idParamName].ShouldNotBeNull();
             set[idParamName].ShouldEqual("1,2,3,4,5");
+        }
+
+        public void Dispose()
+        {
+            SprocMapper.RemoveAllMaps<MyModel>();
+            SprocMapper.RevertToDefaultProvider();
         }
     }
 

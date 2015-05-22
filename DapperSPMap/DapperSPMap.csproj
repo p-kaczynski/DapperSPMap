@@ -48,10 +48,12 @@
     <Compile Include="IBaseSprocMappingExpression.cs" />
     <Compile Include="IMultipleSprocMappingExpression.cs" />
     <Compile Include="ISingleSprocMappingExpression.cs" />
+    <Compile Include="ISprocMapperProvider.cs" />
     <Compile Include="ISprocMappingConfigurationExpression.cs" />
     <Compile Include="ISprocMappingExpression.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SprocMapper.cs" />
+    <Compile Include="SprocMapperProvider.cs" />
     <Compile Include="SprocMapperConfigurationException.cs" />
     <Compile Include="SprocMappingExpression.cs" />
   </ItemGroup>
