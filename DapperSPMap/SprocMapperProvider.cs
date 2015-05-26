@@ -107,5 +107,10 @@ namespace DapperSPMap
 
             _configuration.Remove(typeof (TModel));
         }
+
+        public ISprocTypeMapExpression<TModel> CreateTypeMap<TModel>()
+        {
+            return new SprocTypeMapExpression<TModel>();
+        }
     }
 }

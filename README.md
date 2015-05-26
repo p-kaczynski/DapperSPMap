@@ -6,11 +6,14 @@ DapperSPMap
 ## Purpose
 This solution provides a way to specify programatically the mapping between domain model and stored procedures input parameters for use with Dapper. This solves a problem for a very specific scenario, where the update/delete functionality is exposed via stored procedures, and their input allows for a batch operations.
 
+Additionally the Mapper allows for simple fluent creation of type maps (SqlMapper.ITypeMap) for reading objects in.
+
 ## Usage
 The only class one needs to use is `SprocMapper`. It exposes static methods to create maps and obtain Dapper's `DynamicParameters` from model classes.
 
+### CreateMap
 ```
-	public class MyModelClass{
+	public class MyModel{
 		// This property can be aggregated into a list
 		public int Id {get;set;}
 		// This property is not relevant for update/delete
@@ -24,7 +27,7 @@ The only class one needs to use is `SprocMapper`. It exposes static methods to c
 		private const UpdateProcedureName = "[dbo].[UPDATE_MY_MODEL_ENTITIES]";
 		
 		static MyModelRepository(){
-			SprocMapper.CreateMap<MyModelClass>(UpdateProcedureName)
+			SprocMapper.CreateMap<MyModel>(UpdateProcedureName)
                 .GroupBy(m => m.Value, opt => opt.AsParameter("value_param"))
                 .Aggregate(m => m.Id, opt => opt.AsParameter("id_list"));
 		}
@@ -38,6 +41,30 @@ The only class one needs to use is `SprocMapper`. It exposes static methods to c
 	}
 ```
 In this example passing an enumerable of MyModel objects will result in calling the `[dbo].[UPDATE_MY_MODEL_ENTITIES]` as few times as possible - the entities will be grouped by `Value` property, and for each group a `DynamicParameters` object will be created with the Id properties flattened into a list.
+
+### CreateTypeMap
+```
+	class MyModelRepository {
+		// usage: [dbo].[UPDATE_MY_MODEL_ENTITIES] @value_param = 1, @id_list = '2,8,23,43,343'
+		private const ViewProcedureName = "[dbo].[VIEW_MY_MODEL_ENTITIES]";
+		
+		static MyModelRepository(){
+			SqlMapper.SetTypeMap(typeof(MyModel), 
+				SprocMapper.CreateTypeMap<MyModel>()
+					.Property(m => m.Value, opt => opt.MapAs("value_param"))
+					.Property(m => m.Id, opt => opt.MapAs("id_list"))
+					.RestAsUsual()
+			);
+		}
+		
+		public IEnumerable<MyModel> GetModels(){
+			IDbConnection dbConnection = ...
+			// Using Dapper
+			return dbConnection.Query<MyModel>(ViewProcedureName, null, null, null, CommandType.StoredProcedure);
+		}
+	
+```
+Setting the type map in static constructor of the repository class keeps all the DB-specific information in one place, and (depending on your dependency management) should not fire unless that specific repository is called, saving few unnecessary operations.
 
 ## Other functionality
 ### Non-batch procedures

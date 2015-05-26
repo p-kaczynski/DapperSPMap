@@ -200,6 +200,70 @@ namespace DapperSPMap.Tests
             set[idParamName].ShouldEqual("1,2,3,4,5");
         }
 
+        [Fact]
+        public void CreateTypeMap_ReturnsTypeMap()
+        {
+            SprocMapper.CreateTypeMap<MyModel>()
+                .Property(model => model.Id, p => p.MapAs("id_param"))
+                .Property(model => model.Value, p => p.MapAs("value_param"))
+                .RestAsUsual()
+                .ShouldNotBeNull();
+        }
+
+        [Fact]
+        public void CreateTypeMap_RestAsUsualMapsCorrectly()
+        {
+            const string sampleIdParamName = "id_param";
+            const string sampleValueParamName = "value_param";
+
+            var map = SprocMapper.CreateTypeMap<MyModel>()
+                .Property(model => model.Id, p => p.MapAs(sampleIdParamName))
+                .Property(model => model.Value, p => p.MapAs(sampleValueParamName))
+                .RestAsUsual();
+
+            map.GetMember(sampleIdParamName).MemberType.ShouldEqual(typeof(int));
+            map.GetMember(sampleIdParamName).Property.ShouldNotBeNull();
+            map.GetMember(sampleIdParamName).Property.Name.ShouldEqual("Id");
+
+            map.GetMember(sampleValueParamName).MemberType.ShouldEqual(typeof(int));
+            map.GetMember(sampleValueParamName).Property.ShouldNotBeNull();
+            map.GetMember(sampleValueParamName).Property.Name.ShouldEqual("Value");
+
+            map.GetMember("Description").ShouldNotBeNull();
+            map.GetMember("Description").MemberType.ShouldEqual(typeof(string));
+            map.GetMember("Description").Property.ShouldNotBeNull();
+            map.GetMember("Description").Property.Name.ShouldEqual("Description");
+        }
+
+        [Fact]
+        public void CreateTypeMap_IgnoreRestMapsCorrectly()
+        {
+            const string sampleIdParamName = "id_param";
+            const string sampleValueParamName = "value_param";
+
+            var map = SprocMapper.CreateTypeMap<MyModel>()
+                .Property(model => model.Id, p => p.MapAs(sampleIdParamName))
+                .Property(model => model.Value, p => p.MapAs(sampleValueParamName))
+                .IgnoreRest();
+
+            map.GetMember(sampleIdParamName).MemberType.ShouldEqual(typeof(int));
+            map.GetMember(sampleIdParamName).Property.ShouldNotBeNull();
+            map.GetMember(sampleIdParamName).Property.Name.ShouldEqual("Id");
+
+            map.GetMember(sampleValueParamName).MemberType.ShouldEqual(typeof(int));
+            map.GetMember(sampleValueParamName).Property.ShouldNotBeNull();
+            map.GetMember(sampleValueParamName).Property.Name.ShouldEqual("Value");
+
+            map.GetMember("Description").ShouldBeNull();
+        }
+
+        [Fact]
+        public void CreateTypeMap_ThrowsOnInvalidExpression()
+        {
+            Assert.Throws<ArgumentException>(() => SprocMapper.CreateTypeMap<MyModel>()
+                .Property(model => model.Id.ToString(), p => p.MapAs("any name")));
+        }
+
         public void Dispose()
         {
             SprocMapper.RemoveAllMaps<MyModel>();

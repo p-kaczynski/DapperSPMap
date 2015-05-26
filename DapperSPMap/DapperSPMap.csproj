@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DynamicGroupingKey.cs" />
+    <Compile Include="FallbackTypeMapper.cs" />
     <Compile Include="IAggregateSprocMappingConfigurationExpression.cs" />
     <Compile Include="IBaseSprocMappingExpression.cs" />
     <Compile Include="IMultipleSprocMappingExpression.cs" />
@@ -51,11 +52,15 @@
     <Compile Include="ISprocMapperProvider.cs" />
     <Compile Include="ISprocMappingConfigurationExpression.cs" />
     <Compile Include="ISprocMappingExpression.cs" />
+    <Compile Include="ISprocTypeMapExpression.cs" />
+    <Compile Include="ISprocTypeMapExpressionProperty.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SprocMapper.cs" />
     <Compile Include="SprocMapperProvider.cs" />
     <Compile Include="SprocMapperConfigurationException.cs" />
     <Compile Include="SprocMappingExpression.cs" />
+    <Compile Include="SprocTypeMapExpression.cs" />
+    <Compile Include="SprocTypeMapExpressionProperty.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

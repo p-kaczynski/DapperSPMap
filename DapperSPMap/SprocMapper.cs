@@ -79,5 +79,10 @@ namespace DapperSPMap
         {
             Provider.RemoveAllMaps<TModel>();
         }
+
+        public static ISprocTypeMapExpression<TModel> CreateTypeMap<TModel>()
+        {
+            return Provider.CreateTypeMap<TModel>();
+        } 
     }
 }

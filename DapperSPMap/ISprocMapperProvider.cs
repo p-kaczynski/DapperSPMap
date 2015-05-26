@@ -43,5 +43,7 @@ namespace DapperSPMap
         /// </summary>
         /// <typeparam name="TModel"></typeparam>
         void RemoveAllMaps<TModel>();
+
+        ISprocTypeMapExpression<TModel> CreateTypeMap<TModel>();
     }
 }
