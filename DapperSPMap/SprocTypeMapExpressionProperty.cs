@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 
 namespace DapperSPMap
@@ -7,13 +10,15 @@ namespace DapperSPMap
         internal SprocTypeMapExpressionProperty(PropertyInfo property)
         {
             Property = property;
+            Names = new HashSet<string>();
         }
 
         public PropertyInfo Property { get; private set; }
-        public string Name { get; private set; }
-        public void MapAs(string columnName)
+        public HashSet<string> Names { get; private set; }
+        public ISprocTypeMapExpressionProperty MapAs(string columnName)
         {
-            Name = columnName;
+            Names.Add(columnName);
+            return this;
         }
     }
 }

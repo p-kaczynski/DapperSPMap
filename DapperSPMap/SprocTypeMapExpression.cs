@@ -27,7 +27,11 @@ namespace DapperSPMap
 
         private SqlMapper.ITypeMap GetTypeMap()
         {
-            var dict = _properties.ToDictionary(p => p.Name, p => p.Property);
+            var dict =
+                _properties.SelectMany(
+                    p => p.Names.Select(name => new KeyValuePair<string, PropertyInfo>(name, p.Property)))
+                    .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
             return new CustomPropertyTypeMap(typeof (TModel), (type, columnName) => dict.ContainsKey(columnName) ? dict[columnName] : null);
         }
 

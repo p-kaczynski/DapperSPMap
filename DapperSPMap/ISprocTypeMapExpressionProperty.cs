@@ -2,6 +2,6 @@
 {
     public interface ISprocTypeMapExpressionProperty
     {
-        void MapAs(string columnName);
+        ISprocTypeMapExpressionProperty MapAs(string columnName);
     }
 }
