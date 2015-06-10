@@ -122,16 +122,23 @@ namespace DapperSPMap
 
         public IEnumerable<DynamicParameters> GetParameterSets(IEnumerable<TModel> items)
         {
-            if (!_isMultiple)
-                throw new SprocMapperConfigurationException(
-                    "Mapping expresion is not configured as multi-entity expression  - use GetParameters method");
+            if (_isMultiple)
+                return GetGroupedParameterSets(items);
+            if (_isSingle)
+                return items.Select(GetParameters);
 
+            throw new SprocMapperConfigurationException("Mapping expression is neither multiple or single - configuration error?");
+        }
+
+        private IEnumerable<DynamicParameters> GetGroupedParameterSets(IEnumerable<TModel> items)
+        {
             var groupings = _expressions.Where(expr => expr.Operation == Operations.GroupBy);
             var folds = _expressions.Where(expr => expr.Operation == Operations.Aggregate);
 
             return items.GroupBy(
                 i =>
-                    new DynamicGroupingKey<TModel>(groupings.ToDictionary(g => g.ParameterName, g => g.MemberSelector),
+                    new DynamicGroupingKey<TModel>(
+                        groupings.ToDictionary(g => g.ParameterName, g => g.MemberSelector),
                         i))
                 .Select(g =>
                 {

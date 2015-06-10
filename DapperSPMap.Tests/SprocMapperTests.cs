@@ -102,7 +102,7 @@ namespace DapperSPMap.Tests
         }
 
         [Fact]
-        public void GetParameterSets_ThrowsExceptionIfSingleMapping()
+        public void GetParameterSets_ReturnsMultipleParametersIfSingleMapping()
         {
             const string sampleMapName = "sample name";
             // This creates a configuration for use with enumerable collections of MyModel entities
@@ -110,9 +110,16 @@ namespace DapperSPMap.Tests
                 .Use(m => m.Id, opt => opt.AsParameter("Id_name"))
                 .Use(m => m.Value, opt => opt.AsParameter("Val_name"));
 
-            Assert.Throws<SprocMapperConfigurationException>(
-                () => SprocMapper.GetParameterSets(new[] {new MyModel()}, sampleMapName));
+            var models = new[]
+            {
+                new MyModel {Id = 1, Description = "1", Value = 101},
+                new MyModel {Id = 2, Description = "2", Value = 102},
+                new MyModel {Id = 3, Description = "3", Value = 103}
+            };
 
+            var result = SprocMapper.GetParameterSets(models, sampleMapName).ToList();
+
+            result.Count.ShouldEqual(models.Length);
         }
 
         [Fact]
